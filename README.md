@@ -1,16 +1,29 @@
-# aw_rostamani
+# AWR Vehicle Tracking App
 
-A new Flutter project.
+The AWR Vehicle Tracking App is a Flutter-based mobile application designed for real-time tracking of vehicle movements during pick-up and drop-off. It provides functionalities for both vendors and customers to manage and monitor vehicle statuses efficiently.
 
-## Getting Started
 
-This project is a starting point for a Flutter application.
 
-A few resources to get you started if this is your first Flutter project:
+## Features
+Vendor App:
+- Login: Secure authentication for vendors.
+- View Assignments: Display pick-up and drop-off tasks.
+- Start and End Trips: Manage trip statuses and update real-time locations.
+- Real-Time Location Tracking: Continuous location updates during trips.
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+AWR Team App:
+- Login: Secure authentication for AWR team members.
+- View All Assignments: Access to all assignments and their statuses.
+- Track Vehicle Location: Real-time vehicle location tracking.
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+
+
+## Technologies Used
+- State Management: BLoC
+- Dependency Injection: get_it
+- Networking: Dio
+- Storage: Shared Preferences
+- Localization: easy_localization
+- Navigation: auto_route
+
+
