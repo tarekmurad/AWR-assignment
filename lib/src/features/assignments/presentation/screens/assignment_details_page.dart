@@ -1,0 +1,472 @@
+import 'dart:async';
+
+import 'package:auto_route/auto_route.dart';
+import 'package:aw_rostamani/src/core/utils/helpers.dart';
+import 'package:aw_rostamani/src/features/assignments/presentation/widgets/customer_info_widget.dart';
+import 'package:aw_rostamani/src/injection_container.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:location/location.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+import '../../../../core/constants/app_constants.dart';
+import '../../../../core/shared_components/widgets/button_widget.dart';
+import '../../../../core/shared_components/widgets/divider.dart';
+import '../../../../core/shared_components/widgets/loader_widget.dart';
+import '../../../../core/shared_components/widgets/location_details_widget.dart';
+import '../../../../core/shared_components/widgets/status_widget.dart';
+import '../../../../core/shared_components/widgets/vehicle_information_widget.dart';
+import '../../../../core/styles/app_colors.dart';
+import '../../../../core/styles/assets.dart';
+import '../bloc/bloc.dart';
+
+@RoutePage()
+class AssignmentDetailsPage extends StatefulWidget {
+  final int id;
+  final String refNumber;
+
+  const AssignmentDetailsPage(
+      {Key? key, required this.id, required this.refNumber})
+      : super(key: key);
+
+  @override
+  _AssignmentDetailsPageState createState() => _AssignmentDetailsPageState();
+}
+
+class _AssignmentDetailsPageState extends State<AssignmentDetailsPage> {
+  final _bloc = getIt<AssignmentBloc>();
+  final _scaffoldKey = GlobalKey<ScaffoldState>();
+
+  final Location _location = Location();
+  GoogleMapController? mapController;
+  Marker? currentLocationMarker;
+  Marker? sourceMarker;
+  Marker? destinationMarker;
+  Polyline? routePolyline;
+  int currentIndex = 0;
+  Timer? timer;
+  String _mapStyle = '';
+
+  List<LatLng> routePoints = [
+    const LatLng(25.199429016702688, 55.27507425522772),
+    const LatLng(25.19976128047399, 55.276659164149194),
+    const LatLng(25.20070497201089, 55.27766121830333),
+    const LatLng(25.201186066842276, 55.27798841965977),
+    const LatLng(25.203054917190016, 55.27434830456928),
+    const LatLng(25.20383205443402, 55.273448500839045),
+    const LatLng(25.204202118044694, 55.273019049058696),
+    const LatLng(25.20564535537731, 55.27203744498936),
+    const LatLng(25.20675552629728, 55.27254869710881),
+    const LatLng(25.207366116082866, 55.2729576989926),
+    const LatLng(25.209715932677284, 55.274573255690065),
+    const LatLng(25.211048092013147, 55.27512540797907),
+    const LatLng(25.213286826940653, 55.276802314930876),
+    const LatLng(25.214581944169165, 55.27759986843855),
+    const LatLng(25.216765110367298, 55.27901092428824),
+    const LatLng(25.217671667870974, 55.279726677255475),
+    const LatLng(25.22037279915831, 55.28156718488549),
+    const LatLng(25.222763237996826, 55.283280941878516),
+    const LatLng(25.224313602741155, 55.28436941678441),
+    const LatLng(25.226000125846504, 55.28551578961238),
+    const LatLng(25.228074202796442, 55.28700954772792),
+    const LatLng(25.22907980312968, 55.28863068056648),
+    const LatLng(25.22984447287571, 55.29112027782615),
+    const LatLng(25.230724360812246, 55.29460571342907),
+    const LatLng(25.231363323061082, 55.2972805826127),
+    const LatLng(25.231862921912413, 55.30041593289329),
+    const LatLng(25.232288192129012, 55.30221095772743),
+    const LatLng(25.2328809905551, 55.303336409805986),
+    const LatLng(25.234856780823655, 55.30460501011074),
+    const LatLng(25.236487150650063, 55.30518375798757),
+    const LatLng(25.238715786098915, 55.306043612483016),
+    const LatLng(25.240226448537836, 55.30782946307436),
+    const LatLng(25.241108906027172, 55.30854049618017),
+    const LatLng(25.243935718234663, 55.31105391553096),
+    const LatLng(25.247450446082336, 55.313964191222574),
+    const LatLng(25.24876657326917, 55.31745321413715),
+    const LatLng(25.249768615090122, 55.31917292211401),
+    const LatLng(25.251727807309422, 55.320958772705346),
+    const LatLng(25.257934200176077, 55.326399003505976),
+    const LatLng(25.258038883597944, 55.328763601974146),
+    const LatLng(25.257904290610373, 55.33003684730316),
+    const LatLng(25.25759023972598, 55.33097937955971),
+    const LatLng(25.25998298797378, 55.3325171957663),
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _requestLocationPermission();
+    _initializeMarkers();
+
+    _bloc.add(GetAssignmentDetailsEvent(id: widget.id));
+
+    DefaultAssetBundle.of(context)
+        .loadString('assets/styles/map_style.json')
+        .then((style) {
+      _mapStyle = style;
+    });
+  }
+
+  Future<void> _requestLocationPermission() async {
+    bool serviceEnabled = await _location.serviceEnabled();
+    if (!serviceEnabled) {
+      serviceEnabled = await _location.requestService();
+      if (!serviceEnabled) return;
+    }
+
+    PermissionStatus permissionGranted = await _location.hasPermission();
+    if (permissionGranted == PermissionStatus.denied) {
+      permissionGranted = await _location.requestPermission();
+      if (permissionGranted != PermissionStatus.granted) return;
+    }
+  }
+
+  void _initializeMarkers() async {
+    BitmapDescriptor sourceIcon =
+        await Helper.getMarkerFromAsset(Assets.sourceIcon, 30, 60);
+    sourceMarker = Marker(
+      markerId: const MarkerId('source'),
+      position: routePoints.first,
+      icon: sourceIcon,
+      infoWindow: const InfoWindow(title: 'Source'),
+    );
+
+    BitmapDescriptor destinationIcon =
+        await Helper.getMarkerFromAsset(Assets.destinationIcon, 30, 60);
+    destinationMarker = Marker(
+      markerId: const MarkerId('destination'),
+      position: routePoints.last,
+      icon: destinationIcon,
+      infoWindow: const InfoWindow(title: 'Destination'),
+    );
+  }
+
+  void _onMapCreated(GoogleMapController controller) {
+    mapController = controller;
+  }
+
+  void startLocationSimulation() async {
+    BitmapDescriptor markerIcon =
+        await Helper.getMarkerFromAsset(Assets.markerIcon, 30, 30);
+
+    timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (currentIndex < routePoints.length) {
+        setState(() {
+          currentLocationMarker = Marker(
+            markerId: const MarkerId("vehicle"),
+            position: routePoints[currentIndex],
+            icon: markerIcon,
+            infoWindow: const InfoWindow(title: 'Marker'),
+            anchor: const Offset(0.5, 0.5),
+          );
+
+          routePolyline = Polyline(
+            polylineId: const PolylineId('route'),
+            points: routePoints.sublist(0, currentIndex + 1),
+            color: Colors.blue,
+            width: 5,
+          );
+        });
+
+        mapController?.animateCamera(
+          CameraUpdate.newLatLng(routePoints[currentIndex]),
+        );
+        currentIndex++;
+      } else {
+        timer.cancel();
+      }
+    });
+  }
+
+  void endLocationSimulation() {
+    if (timer != null && timer!.isActive) {
+      timer!.cancel();
+    }
+    currentLocationMarker = null;
+    currentIndex = 0;
+  }
+
+  @override
+  void dispose() {
+    timer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      key: _scaffoldKey,
+      backgroundColor: AppColors.whiteColor,
+      appBar: AppBar(
+        title: Text(
+          '#${widget.refNumber}',
+          style: TextStyle(
+            fontSize: 16.sp,
+            color: Colors.black,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        backgroundColor: AppColors.whiteColor,
+        leading: IconButton(
+          color: AppColors.blackColor,
+          icon: const Icon(Icons.arrow_back_ios_new),
+          iconSize: 18.w,
+          onPressed: () {
+            context.router.maybePop();
+          },
+        ),
+        centerTitle: true,
+      ),
+      body: SafeArea(
+        top: false,
+        bottom: false,
+        child: Column(
+          children: [
+            BlocListener<AssignmentBloc, AssignmentState>(
+              bloc: _bloc,
+              listener: (context, state) {
+                if (state is GetAssignmentDetailsSucceed) {
+                  if (state.assignment.status ==
+                      AssignmentStatus.in_transit.name) {
+                    startLocationSimulation();
+                  } else if (state.assignment.status ==
+                      TrackingStatus.delivered.name) {
+                    routePolyline = Polyline(
+                      polylineId: const PolylineId('route'),
+                      points: routePoints,
+                      color: Colors.blue,
+                      width: 5,
+                    );
+                  }
+                }
+              },
+              child: BlocBuilder<AssignmentBloc, AssignmentState>(
+                bloc: _bloc,
+                buildWhen: (previous, current) {
+                  if (current is GetAssignmentDetailsLoading ||
+                      current is GetAssignmentDetailsSucceed ||
+                      current is GetAssignmentDetailsFailed) {
+                    return true;
+                  } else {
+                    return false;
+                  }
+                },
+                builder: (context, state) {
+                  if (state is GetAssignmentDetailsLoading) {
+                    return Expanded(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Center(
+                            child: LoaderWidget(
+                              size: 30.w,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  } else if (state is GetAssignmentDetailsSucceed) {
+                    return Expanded(
+                      child: Stack(
+                        children: [
+                          SingleChildScrollView(
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                SizedBox(
+                                  height: 300,
+                                  child: GoogleMap(
+                                    style: _mapStyle,
+                                    onMapCreated: _onMapCreated,
+                                    zoomControlsEnabled: false,
+                                    scrollGesturesEnabled: true,
+                                    zoomGesturesEnabled: true,
+                                    myLocationEnabled: false,
+                                    myLocationButtonEnabled: false,
+                                    markers: {
+                                      if (currentLocationMarker != null)
+                                        currentLocationMarker!,
+                                      if (sourceMarker != null) sourceMarker!,
+                                      if (destinationMarker != null)
+                                        destinationMarker!,
+                                    },
+                                    polylines: routePolyline != null
+                                        ? {routePolyline!}
+                                        : <Polyline>{},
+                                    initialCameraPosition: CameraPosition(
+                                      target: routePoints[0],
+                                      zoom: 11,
+                                    ),
+                                  ),
+                                ),
+                                Padding(
+                                  padding: EdgeInsets.symmetric(
+                                      horizontal: 20.w, vertical: 20.h),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          StatusWidget(
+                                            type: state.assignment.type,
+                                            color: AppColors.blackColor,
+                                          ),
+                                          SizedBox(
+                                            width: 5.w,
+                                          ),
+                                          StatusWidget(
+                                            type: state.assignment.status,
+                                            color: Helper.getStatusColor(
+                                                state.assignment.status ?? ''),
+                                          ),
+                                        ],
+                                      ),
+                                      SizedBox(
+                                        height: 20.h,
+                                      ),
+                                      Text(
+                                        'Trip Tracking Details',
+                                        style: TextStyle(
+                                          fontSize: 18.sp,
+                                          color: Colors.black,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      SizedBox(
+                                        height: 20.h,
+                                      ),
+                                      CustomerInfoWidget(
+                                        customerName:
+                                            state.assignment.customer?.name ??
+                                                '',
+                                        onCallPressed: () {
+                                          _makePhoneCall(state
+                                                  .assignment.customer?.phone ??
+                                              '');
+                                        },
+                                      ),
+                                      const DividerWidget(),
+                                      VehicleInformationWidget(
+                                        plateNumber: state
+                                                .assignment.car?.licensePlate ??
+                                            '',
+                                        vehicleMake:
+                                            state.assignment.car?.make ?? '',
+                                        vehicleModel:
+                                            state.assignment.car?.model ?? '',
+                                        vehicleColor:
+                                            state.assignment.car?.color ?? '',
+                                      ),
+                                      const DividerWidget(),
+                                      LocationDetailsWidget(
+                                        sourceAddress: state.assignment
+                                                .sourceLocation?.addressNotes ??
+                                            '',
+                                        destinationAddress: state
+                                                .assignment
+                                                .destinationLocation
+                                                ?.addressNotes ??
+                                            '',
+                                      ),
+                                      const SizedBox(
+                                        height: 80,
+                                      ),
+                                    ],
+                                  ),
+                                )
+                              ],
+                            ),
+                          ),
+                          Positioned.fill(
+                            child: Align(
+                              alignment: Alignment.bottomCenter,
+                              child: Container(
+                                decoration:
+                                    const BoxDecoration(color: Colors.white),
+                                child: Padding(
+                                  padding: EdgeInsets.only(
+                                      left: 20.w, right: 20.w, top: 10.h),
+                                  child: BlocListener<AssignmentBloc,
+                                      AssignmentState>(
+                                    bloc: _bloc,
+                                    listener: (context, buttonState) {
+                                      if (buttonState is StartTripSucceed) {
+                                        startLocationSimulation();
+                                        state.assignment.status =
+                                            AssignmentStatus.in_transit.name;
+                                      } else if (buttonState
+                                          is EndTripSucceed) {
+                                        endLocationSimulation();
+                                        state.assignment.status =
+                                            AssignmentStatus.delivered.name;
+                                      }
+                                    },
+                                    child: BlocBuilder<AssignmentBloc,
+                                            AssignmentState>(
+                                        bloc: _bloc,
+                                        builder: (context, buttonState) {
+                                          if (state.assignment.status ==
+                                              AssignmentStatus
+                                                  .awaiting_pickup.name) {
+                                            return ButtonWidget(
+                                              onPressed: () {
+                                                _bloc.add(StartTripEvent(
+                                                    id: state.assignment.id!));
+                                              },
+                                              labelText: "Start Trip",
+                                              color: AppColors.primaryColor,
+                                              loading: buttonState
+                                                  is StartTripLoading,
+                                            );
+                                          } else if (state.assignment.status ==
+                                              AssignmentStatus
+                                                  .in_transit.name) {
+                                            return ButtonWidget(
+                                              onPressed: () {
+                                                _bloc.add(EndTripEvent(
+                                                    id: state.assignment.id!));
+                                              },
+                                              labelText: "End Trip",
+                                              color: AppColors.primaryColor,
+                                              loading:
+                                                  buttonState is EndTripLoading,
+                                            );
+                                          } else {
+                                            return const SizedBox();
+                                          }
+                                        }),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          )
+                        ],
+                      ),
+                    );
+                  }
+                  return const SizedBox();
+                },
+              ),
+            ),
+            SizedBox(
+              height: 40.h,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _makePhoneCall(String phoneNumber) async {
+    final Uri launchUri = Uri(
+      scheme: 'tel',
+      path: phoneNumber,
+    );
+    await launchUrl(launchUri);
+  }
+}
