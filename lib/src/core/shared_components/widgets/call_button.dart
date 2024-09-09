@@ -1,16 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class CallButton extends StatelessWidget {
   final VoidCallback onPressed;
 
-  const CallButton({Key? key, required this.onPressed}) : super(key: key);
+  const CallButton({super.key, required this.onPressed});
 
   @override
   Widget build(BuildContext context) {
     return Center(
       child: Container(
-        width: 44.0,
-        height: 44.0,
+        width: 44.w,
+        height: 44.w,
         decoration: const BoxDecoration(
           color: Colors.black,
           shape: BoxShape.circle,

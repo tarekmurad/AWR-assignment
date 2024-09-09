@@ -54,7 +54,7 @@ class AssignmentBloc extends Bloc<AssignmentEvent, AssignmentState> {
     emit(StartTripLoading());
 
     // TODO: This should call an API to start the trip, but we will simulate it here for now.
-    await Future.delayed(const Duration(seconds: 3));
+    await Future.delayed(const Duration(seconds: 2));
     if (true) {
       emit(StartTripSucceed());
     } else if (false) {
@@ -69,7 +69,7 @@ class AssignmentBloc extends Bloc<AssignmentEvent, AssignmentState> {
     emit(EndTripLoading());
 
     // TODO: This should call an API to end the trip, but we will simulate it here for now.
-    await Future.delayed(const Duration(seconds: 3));
+    await Future.delayed(const Duration(seconds: 2));
     if (true) {
       emit(EndTripSucceed());
     } else if (false) {

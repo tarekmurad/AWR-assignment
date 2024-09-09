@@ -345,8 +345,6 @@ class HttpHelper {
   }
 
   static BaseError _handleDioError(DioException error) {
-    print("error.type");
-    print(error.type);
     if (error.type == DioExceptionType.unknown ||
         error.type == DioExceptionType.badResponse) {
       if (error.error is SocketException) {

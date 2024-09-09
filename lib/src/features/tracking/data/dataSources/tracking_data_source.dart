@@ -26,13 +26,15 @@ class TrackingDataSourceImpl extends TrackingDataSource {
     return json.decode(jsonString);
   }
 
+  // TODO: This should be an API call to the server
   @override
   Future<Either<BaseError, List<TrackingModel>>>? getTracking() async {
-    await Future.delayed(const Duration(seconds: 3));
+    await Future.delayed(const Duration(seconds: 2));
 
     final responseData = await _loadJson('assets/data/get_tracking_list.json');
 
     final listResponse = ListResponse.fromJson(responseData);
+
     final trackingListResponse = (listResponse.data as List)
         .map((item) => TrackingModel.fromJson(item))
         .toList();
@@ -40,6 +42,7 @@ class TrackingDataSourceImpl extends TrackingDataSource {
     return Right(trackingListResponse);
   }
 
+  // TODO: This should be an API call to the server
   @override
   Future<Either<BaseError, TrackingModel>>? getTrackingDetails(int id) async {
     await Future.delayed(const Duration(seconds: 2));
@@ -48,6 +51,7 @@ class TrackingDataSourceImpl extends TrackingDataSource {
         await _loadJson('assets/data/get_tracking_details_$id.json');
 
     final listResponse = ObjectResponse.fromJson(responseData);
+
     final trackingResponse =
         TrackingModel.fromJson(listResponse.data as Map<String, dynamic>);
 

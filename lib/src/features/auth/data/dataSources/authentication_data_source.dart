@@ -17,6 +17,7 @@ class AuthenticationDataSourceImpl extends AuthenticationDataSource {
 
   /// User
 
+  @override
   Future<Either<BaseError, dynamic>>? login(
       String email, String password) async {
     final response = await _httpHelper.postRequest(
@@ -29,6 +30,5 @@ class AuthenticationDataSourceImpl extends AuthenticationDataSource {
     );
 
     return Right(response);
-    // }
   }
 }

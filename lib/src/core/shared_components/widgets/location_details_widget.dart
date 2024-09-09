@@ -55,7 +55,7 @@ class LocationDetailsWidget extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(width: 20),
+            SizedBox(width: 20.w),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -112,8 +112,8 @@ class LocationDetailsWidget extends StatelessWidget {
 
   Widget _buildDot() {
     return Container(
-      width: 2.0,
-      height: 2.0,
+      width: 2.w,
+      height: 2.w,
       color: Colors.black,
     );
   }

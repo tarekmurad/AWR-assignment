@@ -35,7 +35,6 @@ class _WelcomePageState extends State<WelcomePage> {
 
   @override
   Widget build(BuildContext context) {
-    print('hhh');
     return Scaffold(
       key: _scaffoldKey,
       backgroundColor: AppColors.whiteColor,
@@ -88,9 +87,6 @@ class _WelcomePageState extends State<WelcomePage> {
                         },
                         labelText: 'AWR Team',
                         color: AppColors.primaryColor,
-
-                        // borderColor: AppColors.primaryColor,
-                        // labelColor: AppColors.primaryColor,
                       ),
                     ),
                     SizedBox(

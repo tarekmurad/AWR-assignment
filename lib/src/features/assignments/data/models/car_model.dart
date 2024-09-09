@@ -9,16 +9,11 @@ part 'car_model.g.dart';
 @JsonSerializable()
 class CarModel extends Car {
   CarModel({
-    String? make,
-    String? model,
-    String? color,
-    String? licensePlate,
-  }) : super(
-          make: make,
-          model: model,
-          color: color,
-          licensePlate: licensePlate,
-        );
+    super.make,
+    super.model,
+    super.color,
+    super.licensePlate,
+  });
 
   factory CarModel.fromJson(Map<String, dynamic> json) =>
       _$CarModelFromJson(json);

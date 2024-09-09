@@ -114,13 +114,6 @@ class FirebaseNotifications {
         );
       }
     }
-
-    // BlocProvider.of<AlarmsBloc>(getIt<AppRouter>().navigatorKey.currentContext!)
-    //     .add(
-    //   GetActiveAlarms(
-    //     currentPage: 0,
-    //   ),
-    // );
   }
 
   void showNotification(String title, String body) async {

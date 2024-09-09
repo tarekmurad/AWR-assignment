@@ -1,5 +1,3 @@
-// import 'package:equatable/equatable.dart';
-
 class Authentication {
   String? token;
   String? type;
@@ -18,6 +16,6 @@ class Authentication {
       this.roles,
       this.token});
 
-// @override
-// List<Object?> get props => [token];
+  @override
+  List<Object?> get props => [token];
 }

@@ -41,16 +41,6 @@ class AuthRepositoryImpl implements AuthenticationRepository {
 
   void saveAppGUID(String appGUID) => _prefsHelper.saveAppGUID(appGUID);
 
-  // Future<Result<BaseError, dynamic>> logIn(LoginParam loginParam) async {
-  //   final remote = await _authenticationDataSource.login(loginParam);
-  //
-  //   if (remote!.isRight()) {
-  //     return Result(data: (remote as Right<BaseError, dynamic>).value);
-  //   } else {
-  //     return Result(error: (remote as Left<BaseError, dynamic>).value);
-  //   }
-  // }
-
   @override
   Future<Result<BaseError, Authentication>> login(
       String email, String password) async {

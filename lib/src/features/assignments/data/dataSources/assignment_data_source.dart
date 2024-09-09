@@ -26,13 +26,15 @@ class AssignmentDataSourceImpl extends AssignmentDataSource {
     return json.decode(jsonString);
   }
 
+  // TODO: This should be an API call to the server
   @override
   Future<Either<BaseError, List<AssignmentModel>>>? getAssignment() async {
-    await Future.delayed(const Duration(seconds: 3));
+    await Future.delayed(const Duration(seconds: 2));
 
     final responseData = await _loadJson('assets/data/get_assignments.json');
 
     final listResponse = ListResponse.fromJson(responseData);
+
     final assignmentListResponse = (listResponse.data as List)
         .map((item) => AssignmentModel.fromJson(item))
         .toList();
@@ -40,6 +42,7 @@ class AssignmentDataSourceImpl extends AssignmentDataSource {
     return Right(assignmentListResponse);
   }
 
+  // TODO: This should be an API call to the server
   @override
   Future<Either<BaseError, AssignmentModel>>? getAssignmentDetails(
       int id) async {
@@ -49,6 +52,7 @@ class AssignmentDataSourceImpl extends AssignmentDataSource {
         await _loadJson('assets/data/get_assignment_details_$id.json');
 
     final listResponse = ObjectResponse.fromJson(responseData);
+
     final assignmentResponse =
         AssignmentModel.fromJson(listResponse.data as Map<String, dynamic>);
 

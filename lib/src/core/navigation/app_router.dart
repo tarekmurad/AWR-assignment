@@ -1,5 +1,6 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/foundation.dart';
+
 import '../../features/assignments/presentation/screens/assignment_details_page.dart';
 import '../../features/assignments/presentation/screens/assignments_page.dart';
 import '../../features/auth/presentation/screens/login/login_page.dart';
